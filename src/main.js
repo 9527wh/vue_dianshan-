@@ -3,12 +3,16 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 import './plugins/element.js'
-import './assets/css/Lo.css'
+import './assets/css/global.css'
 import axios from 'axios'
 
-axios.defaults.baseURL='http://timemeetyou.com:8889/api/private/v1/'
+axios.defaults.baseURL = 'http://timemeetyou.com:8889/api/private/v1/'
+axios.interceptors.request.use(config => {
+  config.headers.Authorization = window.sessionStorage.getItem('token')
+  return config
+})
 
-Vue.prototype.$http=axios
+Vue.prototype.$http = axios
 
 
 

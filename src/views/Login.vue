@@ -86,7 +86,7 @@ export default {
   },
 }
 </script>
-<style    scoped>
+<style  lang='less'  scoped>
 .boxd {
   background-color: #2b4b6b;
   height: 100%;
