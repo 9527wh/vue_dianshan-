@@ -30,7 +30,6 @@
         </el-col>
       </el-row>
       <!--用户列表数据 -->
-
       <el-table style="width: 100%" :data="usersList" border>
         <el-table-column label="#" type="index"> </el-table-column>
         <el-table-column label="姓名" prop="username"> </el-table-column>
@@ -43,20 +42,22 @@
               v-model="scope.row.mg_state"
               @change="usersStateChanged(scope.row)"
             >
+              {{ scope.row }}
             </el-switch>
           </template>
         </el-table-column>
         <el-table-column label="操作" prop="username" width="180px">
           <template slot-scope="scope">
-            <el-switch v-model="scope.row.mg_state"> </el-switch>
             <!-- 修改 -->
             <el-button
+              @click="editUser(scope.row.id)"
               type="primary"
               icon="el-icon-edit"
               size="mini"
             ></el-button>
             <!-- 删除 -->
             <el-button
+              @click="delUser(scope.row.id)"
               type="danger"
               icon="el-icon-delete"
               size="mini"
@@ -70,6 +71,7 @@
               :enterable="false"
             >
               <el-button
+                @click="UserSs(scope.row.id,scope.row.rid)"
                 type="warning"
                 icon="el-icon-setting"
                 size="mini"
@@ -142,9 +144,9 @@ export default {
       //添加用户表单
       addFrom: {
         username: '',
-        passwrod:'',
-        email:'',
-        mobile:''
+        passwrod: '',
+        email: '',
+        mobile: '',
       },
       //添加用户表单验证规则
       addFromRules: {
@@ -229,6 +231,16 @@ export default {
         return this.$message.error(res.meta.msg)
       }
       this.$message.success(res.meta.msg)
+    },
+    editUser(id) {
+      console.log(id + '编辑')
+    
+    },
+    delUser(id) {
+      console.log(id + '删除')
+    },
+    UserSs(id) {
+      console.log(rid + '分配角色')
     },
   },
 }
