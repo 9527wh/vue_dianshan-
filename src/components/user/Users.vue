@@ -71,7 +71,7 @@
               :enterable="false"
             >
               <el-button
-                @click="UserSs(scope.row.id,scope.row.rid)"
+                @click="UserSs(scope.row.id, scope.row.rid)"
                 type="warning"
                 icon="el-icon-setting"
                 size="mini"
@@ -97,6 +97,7 @@
       title="添加用户"
       :visible.sync="dialogVisible"
       width="45%"
+      @close="addDialog"
     >
       <el-form
         :model="addFrom"
@@ -107,22 +108,44 @@
         <el-form-item label="用户名" prop="username">
           <el-input v-model="addFrom.username"></el-input>
         </el-form-item>
-        <el-form-item label="密码" prop="passwrod">
-          <el-input v-model="addFrom.passwrod"></el-input>
+        <el-form-item label="密码" prop="password">
+          <el-input v-model="addFrom.password"></el-input>
         </el-form-item>
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="addFrom.email"></el-input>
         </el-form-item>
         <el-form-item label="手机" prop="mobile">
-          <el-input v-model="addFrom.hpone"></el-input>
+          <el-input v-model="addFrom.mobile"></el-input>
         </el-form-item>
       </el-form>
 
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="dialogVisible = false"
-          >确 定</el-button
-        >
+        <el-button type="primary" @click="addUser">确 定</el-button>
+      </span>
+    </el-dialog>
+    <!-- 修改对话框-->
+    <el-dialog title="修改用户" :visible.sync="ediDdialogVisible" width="45%">
+      <el-form
+        :model="editFrom"
+        :rules="editFromRules"
+        ref="editFromRef"
+        label-width="70px"
+        @close="edutDialogClose"
+      >
+        <el-form-item label="用户名">
+          <el-input v-model="editFrom.username"></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱">
+          <el-input v-model="editFrom.email"></el-input>
+        </el-form-item>
+        <el-form-item label="手机">
+          <el-input v-model="editFrom.mobile"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="ediDdialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="aditUsreInfo">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -140,14 +163,16 @@ export default {
         //当前每一页现实多少条数据
         pagesize: 10,
       },
+      //用户列表数据
       usersList: [],
       //添加用户表单
       addFrom: {
         username: '',
-        passwrod: '',
+        password: '',
         email: '',
         mobile: '',
       },
+      editFrom: {},
       //添加用户表单验证规则
       addFromRules: {
         //用户名的验证规则
@@ -160,7 +185,7 @@ export default {
             trigger: 'blur',
           },
         ],
-        passwrod: [
+        password: [
           { required: true, message: '请输入密码', trigger: 'blur' },
           {
             min: 3,
@@ -188,9 +213,33 @@ export default {
           },
         ],
       },
+      //修改用户数据表单验证规则
+      editFromRules: {
+        email: [
+          { required: true, message: '请输入邮箱', trigger: 'blur' },
+          {
+            min: 3,
+            max: 15,
+            message: '邮箱长度在3~15个字符之间',
+            trigger: 'blur',
+          },
+        ],
+        mobile: [
+          { required: true, message: '请输入手机号', trigger: 'blur' },
+          {
+            min: 3,
+            max: 15,
+            message: '手机号长度在3~15个字符之间',
+            trigger: 'blur',
+          },
+        ],
+      },
       //
       total: 0,
+      //添加用户开关
       dialogVisible: false,
+      //修改用户开关
+      ediDdialogVisible: false,
     }
   },
   created() {
@@ -232,14 +281,85 @@ export default {
       }
       this.$message.success(res.meta.msg)
     },
-    editUser(id) {
-      console.log(id + '编辑')
-    
+    //展示修改对话框
+    async editUser(id) {
+      console.log(id)
+      this.ediDdialogVisible = true
+      const { data: res } = await this.$http.get(`users/${id}`)
+      console.log(111)
+      console.log(res)
+      if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
+      this.$message.success(res.meta.msg)
+      this.editFrom = res.data
     },
-    delUser(id) {
-      console.log(id + '删除')
+
+    //监听修改框
+    edutDialogClose() {
+      this.$refs.editFrom.resetFields()
     },
-    UserSs(id) {
+    //监听添加用户对话框的关闭事件
+    addDialog() {
+      this.$refs.addFromRef.resetFields()
+    },
+    //点击按钮添加新用户
+    addUser() {
+      this.$refs.addFromRef.validate(async (valid) => {
+        console.log(this.addFrom.passwrod)
+        if (!valid) return
+        const { data: res } = await this.$http.post('users', this.addFrom)
+        console.log(res.meta.status)
+        if (res.meta.status !== 201) return this.$message.error(res.meta.msg)
+        this.$message.success(res.meta.msg)
+        //隐藏添加的用户对话框
+        this.dialogVisible = false
+        //重新获取用户列表数据
+        this.getUserList()
+      })
+    },
+    //修改用户信息
+    aditUsreInfo() {
+      this.$refs.editFromRef.validate(async (valid) => {
+        if (!valid) return
+        const { data: res } = await this.$http.put(
+          'users/' + this.editFrom.id,
+          {
+            email: this.editFrom.email,
+            mobile: this.editFrom.mobile,
+          }
+        )
+        console.log(res.meta.status)
+        if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
+
+        //隐藏添加的用户对话框
+        this.ediDdialogVisible = false
+        //重新获取用户列表数据
+        this.getUserList()
+        this.$message.success(res.meta.msg)
+      })
+    },
+    //删除
+    async delUser(id) {
+      const confirmRes = await this.$confirm(
+        '此操作将永久删除该用户, 是否继续?',
+        '提示',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning',
+        }
+      ).catch(err=>err)
+      //如果用户取消了删除.则返回值为字符串cancel
+      //如果用户确定了删除.则返回值位字符串confirm
+      if (confirmRes!=="confirm") return this.$message.info("取消了删除")
+      const {data:res}=await this.$http.delete('users/'+id)
+        if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
+
+        //重新获取用户列表数据
+        this.getUserList()
+        this.$message.success(res.meta.msg)
+    },
+    //分配权限
+    UserSs(rid) {
       console.log(rid + '分配角色')
     },
   },
