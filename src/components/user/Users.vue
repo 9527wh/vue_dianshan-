@@ -71,7 +71,7 @@
               :enterable="false"
             >
               <el-button
-                @click="UserSs(scope.row.id, scope.row.rid)"
+                @click="UserSs(scope.row)"
                 type="warning"
                 icon="el-icon-setting"
                 size="mini"
@@ -146,6 +146,33 @@
       <span slot="footer" class="dialog-footer">
         <el-button @click="ediDdialogVisible = false">取 消</el-button>
         <el-button type="primary" @click="aditUsreInfo">确 定</el-button>
+      </span>
+    </el-dialog>
+    <!-- 点击弹出分配角色框 -->
+    <el-dialog
+      title="分配角色"
+      :visible.sync="assigningdialogVisible"
+      width="30%"
+      @close="setRoleDialogClose"
+    >
+      <div>
+        <p>当前用户：{{ usersInfo.username }}</p>
+        <p>当前角色：{{ usersInfo.role_name }}</p>
+        <p>
+          分配新角色：<el-select v-model="selectRoleid" placeholder="请选择">
+            <el-option
+              v-for="item in rolesList"
+              :key="item.id"
+              :label="item.roleName"
+              :value="item.id"
+            >
+            </el-option>
+          </el-select>
+        </p>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="assigningdialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="saveRoleInfo">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -240,6 +267,14 @@ export default {
       dialogVisible: false,
       //修改用户开关
       ediDdialogVisible: false,
+      //分配角色开关
+      assigningdialogVisible: false,
+      //渲染角色分配页面的基础数据
+      usersInfo: {},
+      //角色详情
+      rolesList: [],
+      //已选中的值
+      selectRoleid: '',
     }
   },
   created() {
@@ -253,6 +288,7 @@ export default {
       if (res.meta.status !== 200) {
         return this.$message.error('获取用户列表失败')
       }
+      console.log('444')
       console.log(res.data)
       this.usersList = res.data.users
       this.total = res.data.total
@@ -347,20 +383,53 @@ export default {
           cancelButtonText: '取消',
           type: 'warning',
         }
-      ).catch(err=>err)
+      ).catch((err) => err)
       //如果用户取消了删除.则返回值为字符串cancel
       //如果用户确定了删除.则返回值位字符串confirm
-      if (confirmRes!=="confirm") return this.$message.info("取消了删除")
-      const {data:res}=await this.$http.delete('users/'+id)
-        if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
+      if (confirmRes !== 'confirm') return this.$message.info('取消了删除')
+      const { data: res } = await this.$http.delete('users/' + id)
+      if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
 
-        //重新获取用户列表数据
-        this.getUserList()
-        this.$message.success(res.meta.msg)
+      //重新获取用户列表数据
+      this.getUserList()
+      this.$message.success(res.meta.msg)
     },
     //分配权限
-    UserSs(rid) {
-      console.log(rid + '分配角色')
+    async UserSs(user) {
+      this.usersInfo = user
+      //在展示对话框之前获取角色列表
+      const { data: res } = await this.$http.get('roles')
+      if (res.meta.status !== 200) {
+        return this.$message.error(res.meta.msg)
+      }
+      this.$message.success(res.meta.msg)
+      this.rolesList = res.data
+      this.assigningdialogVisible = true
+    },
+    //提交分配请求
+    async saveRoleInfo() {
+      if (!this.selectRoleid) {
+        return this.$message.error('请选择要分配的角色')
+      }
+      const { data: res } = await this.$http.put(
+        `users/${this.usersInfo.id}/role`,
+        {
+          rid: this.selectRoleid,
+        }
+      )
+      console.log(222333)
+      console.log(res)
+      if (res.meta.status !== 200) {
+        return this.$message.error(res.meta.msg)
+      }
+      this.$message.success(res.meta.msg)
+      this.getUserList()
+      this.assigningdialogVisible = false
+    },
+    //重置分配得值
+    setRoleDialogClose() {
+      this.selectRoleid=''
+      this.usersInfo={}
     },
   },
 }

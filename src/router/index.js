@@ -2,10 +2,10 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Login from '../views/Login.vue'
 import Home from '../views/Home.vue'
-import Won from '../components/Won.vue'
+import Welcome from '../components/Welcome.vue'
 import Users from '../components/user/Users.vue'
-import Roles from '../components/authority/Roles.vue'
-import Rights from '../components/authority/Rights.vue'
+import Roles from '../components/power/Roles.vue'
+import Rights from '../components/power/Rights.vue'
 
 
 
@@ -24,11 +24,11 @@ const routes = [
   {
     path: '/home',
     component: Home,
-    redirect: '/won',
+    redirect: '/welcome',
     children: [
       {
-        path: '/won',
-        component: Won,
+        path: '/welcome',
+        component: Welcome,
       },
       {
         path: '/users',
